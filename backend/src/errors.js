@@ -20,4 +20,10 @@ class DocumentNotFoundError extends AppError {
   }
 }
 
-module.exports = { AppError, ValidationError, DocumentNotFoundError };
+class QuotaExceededError extends AppError {
+  constructor(message = 'Limite de documentos por usuário atingido.') {
+    super(429, 'QUOTA_EXCEEDED', message);
+  }
+}
+
+module.exports = { AppError, ValidationError, DocumentNotFoundError, QuotaExceededError };

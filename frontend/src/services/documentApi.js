@@ -31,10 +31,18 @@ async function toApiError(response) {
 }
 
 async function request(path, userId, options = {}) {
-  const response = await fetch(`${API_PREFIX}${path}`, {
-    ...options,
-    headers: { 'X-User-Id': userId, ...options.headers },
-  });
+  let response;
+  try {
+    response = await fetch(`${API_PREFIX}${path}`, {
+      ...options,
+      headers: { 'X-User-Id': userId, ...options.headers },
+    });
+  } catch (error) {
+    // Abortos propagam para o chamador decidir; falhas de rede ganham
+    // mensagem amigável em vez do "Failed to fetch" do navegador.
+    if (error.name === 'AbortError') throw error;
+    throw new ApiError('Não foi possível conectar ao servidor.', 'NETWORK_ERROR', 0);
+  }
   if (!response.ok) {
     throw await toApiError(response);
   }
@@ -54,8 +62,9 @@ export async function uploadDocument(file, userId) {
 }
 
 // GET /documents — lista os documentos do usuário informado.
-export async function listDocuments(userId) {
-  const response = await request('/documents', userId);
+// Aceita um AbortSignal para cancelar requisições obsoletas.
+export async function listDocuments(userId, { signal } = {}) {
+  const response = await request('/documents', userId, { signal });
   const { documents } = await response.json();
   return documents;
 }

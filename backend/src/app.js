@@ -4,6 +4,7 @@
 // repositories. Uploads são gravados no filesystem local da aplicação usando
 // multer com diskStorage; metadados ficam em memória nesta fase.
 
+const fs = require('node:fs');
 const express = require('express');
 const multer = require('multer');
 const config = require('./config');
@@ -12,8 +13,6 @@ const { AppError } = require('./errors');
 
 const app = express();
 const PORT = config.port;
-
-app.use(express.json());
 
 // Endpoint de verificação de saúde.
 app.get('/health', (req, res) => {
@@ -27,6 +26,11 @@ app.use(documentRoutes);
 app.use((err, req, res, next) => {
   if (res.headersSent) {
     return next(err);
+  }
+  // Remove o arquivo gravado pelo multer quando o upload falha após a escrita,
+  // evitando arquivos órfãos no diretório de armazenamento.
+  if (req.file?.path) {
+    fs.unlink(req.file.path, () => {});
   }
   // Drena o corpo pendente (ex.: multipart rejeitado antes do multer) para
   // evitar que a conexão seja derrubada antes do cliente receber a resposta.

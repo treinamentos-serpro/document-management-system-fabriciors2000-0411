@@ -8,6 +8,8 @@ export default function DownloadButton({ documentId, originalName, userId, onErr
 
   async function handleDownload() {
     setDownloading(true);
+    // Nova tentativa invalida o erro anterior.
+    onError?.(null);
     try {
       const { blob, fileName } = await downloadDocument(documentId, userId);
       const url = URL.createObjectURL(blob);

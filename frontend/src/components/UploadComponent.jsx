@@ -1,5 +1,6 @@
 import { useRef, useState } from 'react';
 import { uploadDocument } from '../services/documentApi.js';
+import ErrorMessage from './ErrorMessage.jsx';
 
 // Componente de upload: seleciona um arquivo, envia ao backend e informa o
 // resultado. Notifica o pai via onUploaded para atualizar a listagem (RF-09).
@@ -42,18 +43,22 @@ export default function UploadComponent({ userId, onUploaded }) {
     <section>
       <h2>Enviar documento</h2>
       <form onSubmit={handleSubmit}>
-        <input
-          ref={inputRef}
-          type="file"
-          onChange={handleFileChange}
-          disabled={uploading}
-        />
+        <label>
+          Arquivo:{' '}
+          <input
+            ref={inputRef}
+            type="file"
+            onChange={handleFileChange}
+            disabled={uploading}
+          />
+        </label>
         <button type="submit" disabled={uploading || !file}>
           {uploading ? 'Enviando…' : 'Enviar'}
         </button>
       </form>
-      {feedback && (
-        <p role="status" style={{ color: feedback.type === 'error' ? 'crimson' : 'green' }}>
+      {feedback?.type === 'error' && <ErrorMessage message={feedback.message} />}
+      {feedback?.type === 'success' && (
+        <p role="status" style={{ color: 'green' }}>
           {feedback.message}
         </p>
       )}
