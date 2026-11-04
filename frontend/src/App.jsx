@@ -13,25 +13,36 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const loadDocuments = useCallback(async () => {
-    if (!userId.trim()) {
-      setDocuments([]);
-      setError('Informe um identificador de usuário.');
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      setDocuments(await listDocuments(userId.trim()));
-    } catch (err) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
+  const trimmedUserId = userId.trim();
 
+  const loadDocuments = useCallback(
+    async (signal) => {
+      if (!trimmedUserId) {
+        setDocuments([]);
+        setError('Informe um identificador de usuário.');
+        return;
+      }
+      setLoading(true);
+      setError(null);
+      try {
+        setDocuments(await listDocuments(trimmedUserId, { signal }));
+      } catch (err) {
+        // Requisição cancelada por uma mais recente: ignora silenciosamente.
+        if (err.name === 'AbortError') return;
+        setError(err.message);
+      } finally {
+        if (!signal?.aborted) setLoading(false);
+      }
+    },
+    [trimmedUserId]
+  );
+
+  // Cancela a requisição anterior quando o usuário muda, evitando que uma
+  // resposta lenta e antiga sobrescreva a listagem atual.
   useEffect(() => {
-    loadDocuments();
+    const controller = new AbortController();
+    loadDocuments(controller.signal);
+    return () => controller.abort();
   }, [loadDocuments]);
 
   return (
@@ -50,13 +61,13 @@ export default function App() {
         </label>
       </section>
 
-      <UploadComponent userId={userId.trim()} onUploaded={loadDocuments} />
+      <UploadComponent userId={trimmedUserId} onUploaded={() => loadDocuments()} />
 
       <DocumentList
         documents={documents}
         loading={loading}
         error={error}
-        userId={userId.trim()}
+        userId={trimmedUserId}
       />
     </main>
   );

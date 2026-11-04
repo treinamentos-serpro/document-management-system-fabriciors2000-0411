@@ -1,6 +1,5 @@
 // Repositório de documentos: metadados em memória e acesso aos arquivos
 // gravados no filesystem local. Os metadados são perdidos ao reiniciar.
-const fs = require('node:fs');
 const path = require('node:path');
 const config = require('../config');
 
@@ -20,14 +19,21 @@ function findByIdAndOwner(id, owner) {
   return document && document.owner === owner ? document : null;
 }
 
+function countByOwner(owner) {
+  return findAllByOwner(owner).length;
+}
+
 // O caminho físico é sempre derivado do nome interno gerado pelo sistema,
-// nunca do nome original enviado pelo cliente.
+// nunca do nome original enviado pelo cliente. Defesa em profundidade: garante
+// que o caminho resolvido permanece dentro do diretório de armazenamento
+// (previne path traversal caso os metadados deixem de ser confiáveis).
 function resolveFilePath(storageName) {
-  return path.join(config.storageDir, storageName);
+  const baseDir = path.resolve(config.storageDir);
+  const resolved = path.resolve(baseDir, path.basename(String(storageName)));
+  if (!resolved.startsWith(baseDir + path.sep)) {
+    throw new Error('Nome de armazenamento inválido.');
+  }
+  return resolved;
 }
 
-function fileExists(storageName) {
-  return fs.existsSync(resolveFilePath(storageName));
-}
-
-module.exports = { save, findAllByOwner, findByIdAndOwner, resolveFilePath, fileExists };
+module.exports = { save, findAllByOwner, findByIdAndOwner, countByOwner, resolveFilePath };
