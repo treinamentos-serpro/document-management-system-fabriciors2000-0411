@@ -126,4 +126,4 @@ Usar códigos estáveis como `VALIDATION_ERROR`, `FILE_TOO_LARGE`, `DOCUMENT_NOT
 4. Construir a interface React, serviço `fetch` via `/api`, seleção de usuário, upload, listagem, download e estados de carregamento/erro.
 5. Validar integração, configuração por ambiente, build do frontend e contratos do backend; documentar os comandos e limitações operacionais.
 
-As etapas 2 a 5 descrevem a implementação do produto; esta especificação não substitui nem implica execução futura adicional.
+As etapas 2 a 5 descrevem a implementação do produto; esta especificação não substitui nem implica execução futura adicional. 
